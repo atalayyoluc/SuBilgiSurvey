@@ -1,0 +1,71 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BASE: ghcr.io/atalayyoluc/subilgisurvey
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Backend Build & Push
+      - name: Build and push API
+        uses: docker/build-push-action@v5
+        with:
+          context: ./SuBilgiSurvey.Backend
+          push: true
+          tags: ${{ env.IMAGE_NAME_BASE }}/api:latest
+
+      # Frontend Build & Push
+      - name: Build and push UI
+        uses: docker/build-push-action@v5
+        with:
+          context: ./SuBilgiSurvey.UI
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://demo-subilgiapi.atalayyoluc.com
+          tags: ${{ env.IMAGE_NAME_BASE }}/ui:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            # Kök dizinde /survey oluşturma ve yetkilendirme
+            sudo mkdir -p /survey
+            sudo chown -R $USER:$USER /survey
+            cd /survey
+            
+            # Güncel compose dosyasını çek
+            curl -o docker-compose.prod.yml https://raw.githubusercontent.com/atalayyoluc/SuBilgiSurvey/main/docker-compose.prod.yml
+            
+            # Login ve Deploy
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u atalayyoluc --password-stdin
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+            docker image prune -f

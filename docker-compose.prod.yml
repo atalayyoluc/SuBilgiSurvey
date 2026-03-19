@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: subilgi-postgres
+    restart: always
+    command: -p 5435
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: SuBilgiSurvey
+    ports:
+      - "5435:5435"
+    volumes:
+      - subilgi_pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -p 5435 -U postgres -d SuBilgiSurvey"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: ghcr.io/atalayyoluc/subilgisurvey/api:latest
+    container_name: subilgi-api
+    restart: always
+    ports:
+      - "5083:5083"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ApplyMigrationsOnStartup=true
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5435;Database=SuBilgiSurvey;Username=postgres;Password=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ui:
+    image: ghcr.io/atalayyoluc/subilgisurvey/ui:latest
+    container_name: subilgi-ui
+    restart: always
+    ports:
+      - "3333:3333"
+    depends_on:
+      - api
+
+volumes:
+  subilgi_pgdata_prod:
