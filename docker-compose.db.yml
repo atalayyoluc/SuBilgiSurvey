@@ -1,0 +1,24 @@
+# Yalnızca PostgreSQL (5432). API/UI'yi yerelde çalıştırırken kullanın.
+# Yerel API'de migration için: ApplyMigrationsOnStartup=true veya
+# dotnet ef database update --project SuBilgiSurvey.Backend/SuBilgiSurveyBackend.Infrastructure --startup-project SuBilgiSurvey.Backend/SuBilgiSurveyBackend.Api
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: subilgi-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: SuBilgiSurvey
+    volumes:
+      - subilgi_pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d SuBilgiSurvey"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  subilgi_pgdata_dev:

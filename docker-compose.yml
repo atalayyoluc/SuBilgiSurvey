@@ -1,0 +1,51 @@
+# Tam yığın: PostgreSQL (5432) + API (5083) + UI (3000)
+# API her başlangıçta bekleyen EF migration'ları uygular (DB yoksa oluşturulur).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: subilgi-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: SuBilgiSurvey
+    volumes:
+      - subilgi_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d SuBilgiSurvey"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  api:
+    build:
+      context: ./SuBilgiSurvey.Backend
+      dockerfile: Dockerfile
+    container_name: subilgi-api
+    ports:
+      - "5083:5083"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ApplyMigrationsOnStartup: "true"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=SuBilgiSurvey;Username=postgres;Password=postgres"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ui:
+    build:
+      context: ./SuBilgiSurvey.UI
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5083
+    container_name: subilgi-ui
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  subilgi_pgdata:

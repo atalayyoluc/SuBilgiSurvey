@@ -1,0 +1,9 @@
+﻿namespace SuBilgiSurveyBackend.Core.Common;
+
+public class BaseEntity : IBaseAuditableEntity
+{
+    public int Id { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
