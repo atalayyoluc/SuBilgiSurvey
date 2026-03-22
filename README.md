@@ -22,3 +22,15 @@ docker compose -f docker-compose.db.yml up -d
 ```
 
 Yerel bağlantı: `Host=localhost;Database=SuBilgiSurvey;Username=postgres;Password=postgres`
+
+
+## 🚀 Canlı Demo
+**Link:** [demo-subilgisurvey.atalayyoluc.com](https://demo-subilgisurvey.atalayyoluc.com/)
+
+### 🔑 Test Kimlik Bilgileri
+| Rol | E-posta | Şifre |
+| :--- | :--- | :--- |
+| **Admin** | `atalayyoluc@gmail.com` | `Atalay+1` |
+| **User** | `testuser@gmail.com` | `Atalay+1` |
+
+---
