@@ -27,8 +27,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ApplyMigrationsOnStartup=true
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5435;Database=SuBilgiSurvey;Username=postgres;Password=postgres
-    depends_on:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5435;Database=SuBilgiSurvey;Username=postgres;Password=postgres;Pooling=true;Minimum Pool Size=0;Maximum Pool Size=50;Connection Idle Lifetime=300;   depends_on:
       postgres:
         condition: service_healthy
 
@@ -37,7 +36,7 @@ services:
     container_name: subilgi-ui
     restart: always
     ports:
-      - "3333:3333"
+      - "3333:3000"
     depends_on:
       - api
 
