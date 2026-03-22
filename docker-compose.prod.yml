@@ -5,16 +5,16 @@ services:
     restart: always
     command: -p 5435
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: SuBilgiSurvey
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5435:5435"
     volumes:
       - subilgi_pgdata_prod:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -p 5435 -U postgres -d SuBilgiSurvey"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -p 5435 -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
@@ -27,7 +27,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ApplyMigrationsOnStartup=true
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5435;Database=SuBilgiSurvey;Username=postgres;Password=postgres;Pooling=true;Minimum Pool Size=0;Maximum Pool Size=50;Connection Idle Lifetime=300;   depends_on:
+      # Şifre ve DB bilgilerini .env'den çekiyoruz
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5435;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD};Pooling=true;Minimum Pool Size=0;Maximum Pool Size=50;Connection Idle Lifetime=300;
+    depends_on:
       postgres:
         condition: service_healthy
 
